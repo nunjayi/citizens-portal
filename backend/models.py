@@ -1,23 +1,46 @@
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from datetime import datetime
 
-# contains definitions of tables and associated schema constructs
+# Contains definitions of tables and associated schema constructs
 metadata = MetaData(
     naming_convention={
         'fk': 'fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s'
     }
 )
 
-# create the Flask SQLAlchemy extension
+# Create the Flask SQLAlchemy extension
 db = SQLAlchemy(metadata=metadata)
 
-# define a model class by inheriting from db.Model.
+def create_app():
+    # Initialize the Flask application
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///civil_servants.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    return app
+
+class CivilServant(db.Model):
+    __tablename__ = 'civil_servant'
+    civil_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    ministry_id = db.Column(db.Integer, db.ForeignKey('ministry.ministry_id'), nullable=False)
+    role = db.Column(db.String(80), nullable=False)
+    salary = db.Column(db.Float, nullable=False)
+    allowance = db.Column(db.Float, nullable=False)
+
+class Ministry(db.Model):
+    __tablename__ = 'ministry'
+    ministry_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    civil_servants = db.relationship('CivilServant', backref='ministry', lazy=True)
+
 class Project(db.Model):
     __tablename__ = 'projects'
 
     project_id = db.Column(db.Integer, primary_key=True)
-    ministry_id = db.Column(db.Integer, db.ForeignKey('ministries.ministry_id'))
+    ministry_id = db.Column(db.Integer, db.ForeignKey('ministry.ministry_id'))
     name = db.Column(db.String)
     description = db.Column(db.String(80))
     date = db.Column(db.DateTime)
@@ -35,10 +58,10 @@ class Project(db.Model):
             'name': self.name,
             'description': self.description,
             'date': self.date.isoformat(),
-           'status': self.status,
+            'status': self.status,
             'budget_id': self.budget_id
         }
-    
+
 class Budget(db.Model):
     __tablename__ = 'budgets'
 
