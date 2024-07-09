@@ -1,7 +1,5 @@
-# routes.py
-
-from flask import request, jsonify
-from models import db, CivilServant, Ministry, create_app
+from flask import Flask, request, jsonify
+from model import db, Ministry, CivilServant, Project, Budget, create_app
 
 app = create_app()
 
@@ -68,3 +66,36 @@ def delete_civil_servant(civil_id):
     db.session.delete(civil_servant)
     db.session.commit()
     return jsonify({'message': 'Civil Servant deleted successfully'})
+
+@app.route('/projects', methods=['POST'])
+def create_project():
+    data = request.json
+    project = Project(
+        ministry_id=data['ministry_id'],
+        name=data['name'],
+        description=data['description'],
+        date=datetime.strptime(data['date'], '%Y-%m-%d'),
+        status=data['status'],
+        budget_id=data['budget_id']
+    )
+    db.session.add(project)
+    db.session.commit()
+    return jsonify({'message': 'Project created successfully'}), 201
+
+@app.route('/projects', methods=['GET'])
+def get_projects():
+    projects = Project.query.all()
+    return jsonify([project.to_dict() for project in projects])
+
+@app.route('/budgets', methods=['POST'])
+def create_budget():
+    data = request.json
+    budget = Budget(amount=data['amount'])
+    db.session.add(budget)
+    db.session.commit()
+    return jsonify({'message': 'Budget created successfully'}), 201
+
+@app.route('/budgets', methods=['GET'])
+def get_budgets():
+    budgets = Budget.query.all()
+    return jsonify([budget.to_dict() for budget in budgets])
