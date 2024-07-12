@@ -20,7 +20,7 @@ def create_citizens(n=40):
 def create_ministries(n=10):
     ministries = []
     for _ in range(n):
-        ministry = Ministry(name=fake.company())
+        ministry = Ministry(name=fake.company(), amount=round(random.uniform(10000, 1000000), 2))
         db.session.add(ministry)
         ministries.append(ministry)
     db.session.commit()
@@ -52,7 +52,7 @@ def create_civil_servants(citizens, ministries, n=50):
 
 def create_projects(ministries, budgets, n=10):
     projects = []
-    statuses = ['Planning', 'In Progress', 'Complete']  # Define your project statuses
+    statuses = ['Planning', 'In Progress', 'Complete'] 
 
     for _ in range(n):
         ministry = random.choice(ministries)
