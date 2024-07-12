@@ -3,7 +3,7 @@
 from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from models import db, Tender, Expenditure, Ministry, CivilServant, Project, Budget
+from models import db, Citizen, Tender, Expenditure, Ministry, CivilServant, Project, Budget
 from datetime import datetime
 
 # create a Flask application instance 
@@ -28,6 +28,8 @@ api = Api(app)
 @app.route("/")
 def index():
     return "Welcome to the Citizens Portal API!"
+
+# Citizen Routes
 
 # Tender Routes
 class Tenders(Resource):
