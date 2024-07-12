@@ -1,7 +1,11 @@
+#backend/models.py
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from datetime import datetime
+from flask_bcrypt import bcrypt
+from sqlalchemy.ext.hybrid import hybrid_property
 
 # Contains definitions of tables and associated schema constructs
 metadata = MetaData(
@@ -25,7 +29,7 @@ class Citizen(db.Model):
     __tablename__ = 'citizens'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    password = db.Column(db.String(100), nullable=False)
+    _password_hash = db.Column(db.String(100), nullable=False)
 
     civil_servants = db.relationship('CivilServant', backref='citizen', cascade='all, delete')
     tenders = db.relationship('Tender', backref='citizen', cascade='all, delete')
@@ -33,18 +37,33 @@ class Citizen(db.Model):
     def __repr__(self):
         return f'<Citizen {self.name}>'
     
+    @hybrid_property
+    def password_hash(self):
+        return self._password_hash
+    
+    @password_hash.setter
+    def password_hash(self, password):
+        password_hash = bcrypt.generate_password_hash(
+            password.encode('utf-8'))
+        self._password_hash = password_hash.decode('utf-8')
+
+    def authenticate(self, password):
+        return bcrypt.check_password_hash(
+            self._password_hash, password.encode('utf-8'))
+
+    
     def to_dict(self):
         return {
             'user_id': self.id,
             'name': self.name,
-            'password': self.password
+            '_password_hash': self._password_hash,
         }
 
 class Ministry(db.Model):
     __tablename__ = 'ministries'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
-    amount = db.Column(db.Integer)
+    amount = db.Column(db.Float)
 
     civil_servants = db.relationship('CivilServant', backref='ministry', cascade='all, delete')
     projects = db.relationship('Project', backref='ministry', cascade='all, delete')
@@ -92,8 +111,6 @@ class Project(db.Model):
     status = db.Column(db.String, nullable=False)
     budget_id = db.Column(db.Integer, db.ForeignKey('budgets.id'), nullable=False)
 
-    budget = db.relationship('Budget', backref='projects', cascade='all')
-
     def __repr__(self):
         return f'<Project {self.name} |Ministry {self.ministry_id}>'
     
@@ -111,7 +128,7 @@ class Budget(db.Model):
     __tablename__ = 'budgets'
 
     id = db.Column(db.Integer, primary_key=True, nullable=False)
-    amount = db.Column(db.Integer, nullable=False)
+    amount = db.Column(db.Float, nullable=False)
 
     projects = db.relationship('Project', backref='budget', cascade='all')
 
