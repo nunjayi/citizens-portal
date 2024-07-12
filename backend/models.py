@@ -107,7 +107,8 @@ class Project(db.Model):
     ministry_id = db.Column(db.Integer, db.ForeignKey('ministries.id'), nullable=False)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String(80), nullable=False)
-    date = db.Column(db.DateTime, nullable=False)
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime)
     status = db.Column(db.String, nullable=False)
     budget_id = db.Column(db.Integer, db.ForeignKey('budgets.id'), nullable=False)
 
@@ -115,14 +116,21 @@ class Project(db.Model):
         return f'<Project {self.name} |Ministry {self.ministry_id}>'
     
     def to_dict(self):
-        return {
+        project_dict = {
             'project_id': self.id,
             'name': self.name,
             'description': self.description,
-            'date': self.date.isoformat(),
+            'start_date': self.start_date.isoformat(),
             'status': self.status,
             'budget_id': self.budget_id
         }
+
+        if self.status != 'Complete':
+            project_dict['end_date'] = None
+        else:
+            project_dict['end_date'] = self.end_date.isoformat()
+
+        return project_dict
 
 class Budget(db.Model):
     __tablename__ = 'budgets'

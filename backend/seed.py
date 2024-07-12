@@ -1,15 +1,15 @@
-#backend/seed.py
+#backend/sedd.py
 
 import random
 from faker import Faker
 from datetime import datetime
-from app import app
-from models import db, Citizen, Ministry, CivilServant, Project, Budget, Expenditure, Tender
+from app import app, db
+from models import Citizen, Ministry, CivilServant, Project, Budget, Expenditure, Tender
 
 fake = Faker()
 
 def create_citizens(n=40):
-    citizens=[]
+    citizens = []
     for _ in range(n):
         citizen = Citizen(name=fake.name(), _password_hash=fake.password())
         db.session.add(citizen)
@@ -50,19 +50,33 @@ def create_civil_servants(citizens, ministries, n=50):
     db.session.commit()
     return civil_servants
 
-def create_projects(ministries, budgets, n=30):
+def create_projects(ministries, budgets, n=10):
     projects = []
+    statuses = ['Planning', 'In Progress', 'Complete']  # Define your project statuses
+
     for _ in range(n):
+        ministry = random.choice(ministries)
+        budget = random.choice(budgets)
+        status = random.choice(statuses)
+        start_date = fake.date_time_between(start_date='-1y', end_date='now')
+        
+        if status == 'Complete':
+            end_date = datetime.now()
+        else:
+            end_date = None
+        
         project = Project(
-            ministry_id=random.choice(ministries).id,
-            name=fake.catch_phrase(),
+            ministry_id=ministry.id,
+            name=fake.company(),
             description=fake.text(),
-            date=fake.date_this_decade(),
-            status=random.choice(['Planning', 'In Progress', 'Completed']),
-            budget_id=random.choice(budgets).id
+            start_date=start_date,
+            end_date=end_date,
+            status=status,
+            budget_id=budget.id
         )
         db.session.add(project)
         projects.append(project)
+    
     db.session.commit()
     return projects
 
@@ -96,12 +110,14 @@ def create_tenders(civil_servants, expenditures, n=50):
 if __name__ == '__main__':
     with app.app_context():
         print('Starting seeding...')
-        db.create_all() 
-        citizens = create_citizens() 
+        db.create_all()
+        
+        citizens = create_citizens()
         ministries = create_ministries()
         budgets = create_budgets()
         civil_servants = create_civil_servants(citizens, ministries)
         projects = create_projects(ministries, budgets)
         expenditures = create_expenditures(budgets)
         tenders = create_tenders(civil_servants, expenditures)
+        
         print("Fake data has been generated and added to the database.")
