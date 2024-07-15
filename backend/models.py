@@ -4,7 +4,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from datetime import datetime
-from flask_bcrypt import bcrypt
+from flask_bcrypt import Bcrypt
 from sqlalchemy.ext.hybrid import hybrid_property
 
 # Contains definitions of tables and associated schema constructs
@@ -17,12 +17,16 @@ metadata = MetaData(
 # Create the Flask SQLAlchemy extension
 db = SQLAlchemy(metadata=metadata)
 
+#Create the Bcrypt instance
+bcrypt = Bcrypt()
+
 def create_app():
     # Initialize the Flask application
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
+    bcrypt.init_app(app)
     return app
 
 class Citizen(db.Model):
