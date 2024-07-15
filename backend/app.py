@@ -45,7 +45,7 @@ class Citizens(Resource):
         data = request.get_json()
         new_citizen = Citizen(
             name=data['name'],
-            password=data['password']
+            password_hash=data['password']  
         )
         db.session.add(new_citizen)
         db.session.commit()
@@ -68,6 +68,8 @@ class CitizenByID(Resource):
         citizen = Citizen.query.get_or_404(id)
         data = request.get_json()
         citizen.name = data['name']
+        if 'password' in data:
+            citizen.password_hash = data['password']  
         db.session.commit()
         response = {
            'message': 'Citizen details updated',
